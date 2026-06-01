@@ -1,0 +1,78 @@
+name: Build Bruteforcer
+
+on:
+  push:
+    paths:
+      - 'Bruteforcer/**'
+  pull_request:
+    paths:
+      - 'Bruteforcer/**'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Show dotnet info
+        run: dotnet --info
+
+      - name: Restore (all projects)
+        run: dotnet restore
+
+      # Build the shared/core and library projects (adjust paths if needed)
+      - name: Build UI (WinForms) - Release
+        run: |
+          dotnet build Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release
+
+      - name: Build Console - Release
+        run: |
+          dotnet build Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release
+
+      - name: Build Library - Release
+        run: |
+          dotnet build Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release
+
+      # Publish outputs (change to self-contained if you need a bundled runtime)
+      - name: Publish UI
+        run: |
+          dotnet publish Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release -r win-x64 -o ${{ github.workspace }}/publish/ui --self-contained false
+
+      - name: Publish Console
+        run: |
+          dotnet publish Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release -r win-x64 -o ${{ github.workspace }} /publish/console --self-contained false
+
+      - name: Publish Library (nuget/build output)
+        run: |
+          dotnet publish Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release -o ${{ github.workspace }}/publish/lib
+
+      - name: List publish folder
+        run: Get-ChildItem -Recurse -Force ${{ github.workspace }}/publish | Select-Object FullName,Length
+
+      - name: Upload UI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bruteforcer-ui
+          path: publish/ui
+
+      - name: Upload Console artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bruteforcer-console
+          path: publish/console
+
+      - name: Upload Library artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bruteforcer-lib
+          path: publish/lib
