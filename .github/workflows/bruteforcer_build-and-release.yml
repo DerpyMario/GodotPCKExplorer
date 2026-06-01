@@ -30,34 +30,29 @@ jobs:
       - name: Restore (all projects)
         run: dotnet restore
 
-      # Build the shared/core and library projects (adjust paths if needed)
       - name: Build UI (WinForms) - Release
-        run: |
-          dotnet build Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release
+        run: dotnet build Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release
 
       - name: Build Console - Release
-        run: |
-          dotnet build Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release
+        run: dotnet build Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release
 
       - name: Build Library - Release
-        run: |
-          dotnet build Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release
+        run: dotnet build Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release
 
-      # Publish outputs (change to self-contained if you need a bundled runtime)
       - name: Publish UI
         run: |
-          dotnet publish Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release -r win-x64 -o ${{ github.workspace }}/publish/ui --self-contained false
+          dotnet publish Bruteforcer/UI/PCKBruteforcer.UI.csproj -c Release -r win-x64 -o "${{ github.workspace }}\publish\ui" --self-contained false
 
       - name: Publish Console
         run: |
-          dotnet publish Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release -r win-x64 -o ${{ github.workspace }} /publish/console --self-contained false
+          dotnet publish Bruteforcer/Console/PCKBruteforcer.Console.csproj -c Release -r win-x64 -o "${{ github.workspace }}\publish\console" --self-contained false
 
-      - name: Publish Library (nuget/build output)
+      - name: Publish Library
         run: |
-          dotnet publish Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release -o ${{ github.workspace }}/publish/lib
+          dotnet publish Bruteforcer/PCKBruteforcer/PCKBruteforcer.csproj -c Release -o "${{ github.workspace }}\publish\lib"
 
       - name: List publish folder
-        run: Get-ChildItem -Recurse -Force ${{ github.workspace }}/publish | Select-Object FullName,Length
+        run: Get-ChildItem -Recurse -Force "${{ github.workspace }}\publish" | Select-Object FullName,Length
 
       - name: Upload UI artifact
         uses: actions/upload-artifact@v4
